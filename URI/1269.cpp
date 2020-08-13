@@ -18,15 +18,18 @@ unordered_map<int, unordered_set<int>> dependencies;
 
 int visited[MAX_T];
 
-void dfs(const int root, int u) {
+void dfs(int u) {
 	visited[u] = 1;
 	int effort = 0;
 	for (int v : taskGraph[u]) {
-		dependencies[root].insert(v);
+		dependencies[u].insert(v);
 		
 		if (!visited[v]) {
-			dfs(root, v);
+			dfs(v);
 		}
+
+		dependencies[u].insert(dependencies[v].begin(), dependencies[v].end());
+
 		effort += maxTaskEffort[v];
 	}
 	maxTaskEffort[u] = effort + taskEffort[u];
@@ -40,6 +43,7 @@ int main() {
 		memset (taskEffort, 0, sizeof taskEffort);
 		memset (maxTaskEffort, 0, sizeof maxTaskEffort);
 		memset (level, -1, sizeof level);
+		memset (visited, 0, sizeof visited);
 		
 		
 		for (int taskId = 1; taskId <= T; taskId++) {
@@ -58,8 +62,9 @@ int main() {
 		}
 
 		for (int tId = 1; tId <= T; tId++) {
-			memset(visited, 0, sizeof visited);
-			dfs (tId, tId);
+			if (!visited[tId]) {
+				dfs (tId);
+			}
 		}
 		
 		unordered_set<int> resultSet;
