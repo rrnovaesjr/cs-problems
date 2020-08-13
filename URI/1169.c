@@ -1,8 +1,8 @@
 #include <stdio.h>
-#include <math.h>
 
 unsigned long long int calculate (int val) {
-	return (unsigned long long int) ((pow(2, val)-1)/12000);
+	val--;
+	return (((1ULL << val)-1ULL)/6000ULL);
 }
 
 int main() {
