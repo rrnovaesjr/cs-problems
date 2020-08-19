@@ -40,7 +40,6 @@ unsigned long long int calculate(int N) {
 			if (hasSquareToCheck) {
 				untilNow += 1ULL;
 				tower[rod].push_back(untilNow);
-				break;
 			}
 		}
 	} while (hasSquareToCheck);
