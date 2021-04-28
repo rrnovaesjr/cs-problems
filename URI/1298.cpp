@@ -1,9 +1,12 @@
 
 #include <bits/stdc++.h>
 #define N 300
-#define MAX_N(t) (4*t*(t+1))
+#define MAX_N(t) (2*t*(2*t+1))
 
 using namespace std;
+
+const int dx[4] = { 0, 1, 0, -1 };
+const int dy[4] = { 1, 0, -1, 0 };
 
 int n;
 
@@ -22,22 +25,17 @@ inline void insertEdge(int u, int v) {
 inline vector<pair<int, int>> neighbours(pair<int, int> u) {
     vector<pair<int, int>> adj;
 
-    for (register int i = -1; i <= 1; i+= 2) {
-        if (u.first + i >= 0                                                                                            // vertical position should be valid
-            && u.first + i < 2 * n                                                                                      // vertical position should be valid
-            && graphT[P(u.first, u.second)].find(P((u.first + i), u.second)) == graphT[P(u.first, u.second)].end())        // vertical position should not be blocked
-        {
-            adj.push_back(make_pair(u.first + i, u.second));
-        }
-    }
+    for (int d = 0; d < 4; d++) {
+        int x = u.first + dx[d];
+        int y = u.second + dy[d];
 
-    for (register int j = -1; j <= 1; j+= 2) {
-        if (u.second + j >= 0                                                                                           // horizontal position should be valid
-            && u.second + j < 2 * n + 1                                                                                 // horizontal position should be valid
-            && graphT[P(u.first, u.second)].find(P(u.first, (u.second + j))) == graphT[P(u.first, u.second)].end())     // horizontal position should not be blocked
+        if ((x >= 0 && x < 2 * n ) &&
+            (y >= 0 && y < 2 * n + 1) &&
+            graphT[P(u.first, u.second)].find(P(x, y)) == graphT[P(u.first, u.second)].end()) 
         {
-            adj.push_back(make_pair(u.first, u.second + j));
+            adj.push_back(make_pair(x, y));
         }
+
     }
 
     return adj;
@@ -68,21 +66,22 @@ void bfs(int x, int y) {
 int main() {
 
     char b;
-    int evenLine;
+    int evenLine, rj;
     while (scanf("%d", &n) == 1) {
         
         graphT.clear();
         graphT.resize(MAX_N(n));
-        for (int i = 0; i < 2 * n - 1; i++) {
-            for (int j = 0; j < n; j++) {
+
+        for (register int i = 0; i < 2 * n - 1; i++) {
+            for (register int j = 0; j < n; j++) {
                 cin >> b;
-                evenLine = i % 2;     
+                rj = 2*j + i % 2;     
                 if (b == 'H') {
-                    insertEdge(P(i, (j*2 + evenLine)), P((i+1), (j*2 + evenLine)));
-                    insertEdge(P(i, j*2+1 + evenLine), P((i+1), (j*2+1 + evenLine)));
+                    insertEdge(P(i, (rj)), P((i+1), (rj)));
+                    insertEdge(P(i, rj+1), P((i+1), (rj+1)));
                 } else {
-                    insertEdge(P(i, (j*2 + evenLine)), P(i, (j*2+1 + evenLine)));
-                    insertEdge(P((i+1), (j*2 + evenLine)), P((i+1), (j*2+1 + evenLine)));
+                    insertEdge(P(i, (rj)), P(i, (rj+1)));
+                    insertEdge(P((i+1), (rj)), P((i+1), (rj+1)));
                 }
             }
         }
