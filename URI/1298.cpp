@@ -17,7 +17,7 @@ bitset<4 * N> g[4 * N + 2];
 #define COLUMNS (2*(2*n+1))
 
 void bfs(int x, int y) {
-    queue<pair<int, int>> Q;
+    queue<pair<int, int> > Q;
     Q.push(make_pair(x, y));
     while (!Q.empty()) {
         pair<int, int> u = Q.front();
@@ -38,18 +38,6 @@ void bfs(int x, int y) {
     }
 }
 
-void printGraph(int i = 0) {
-    #ifdef TRACE
-    cout << i << ':' << endl;
-    for (int i = 0; i < ROWS; i++) {
-        for (int j = 0; j < COLUMNS; j++) {
-            cout << ' ' << g[i][j];
-        }
-        cout << endl;
-    }
-    #endif
-}
-
 int main() {
 
     char b;
@@ -59,10 +47,6 @@ int main() {
         for (int i = 0; i < ROWS; i++) {
             g[i].reset();
         }
-
-        #ifdef DEBUG
-        printGraph();
-        #endif
 
         for (int i = 0; i < 2 * n - 1; i++) {
             for (int j = 0; j < n; j++) {
@@ -85,13 +69,11 @@ int main() {
         }
 
         int cfcs = 0;
-        printGraph(cfcs);
         for (int i = 0; i < ROWS; i++) {
             for (int j = 0; j < COLUMNS; j++) {
                 if (!g[i][j]) {
                     bfs(i, j);
                     cfcs++;
-                    printGraph(cfcs);
                 }
             }
         }
