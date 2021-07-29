@@ -1,52 +1,3 @@
-/*#include <bits/stdc++.h>
-
-using namespace std;
-
-#define MAX_N 10001
-#define ALBERTO 0
-#define WANDERLEY 1
-
-// The cards index at left, right and the players
-int C[MAX_N][MAX_N];
-
-vector<int> cards;
-
-int N;
-
-int calculate() {
-	for (int i = 0; i < N; i++)
-		for (int j = i; j < N; j++)
-			C[j][i] = 0;
-
-	int p = WANDERLEY;
-	for (int l = 0; l < N - 1; l++) {
-		for (int r = l + 1; r < N; r++) {	
-			if (p == WANDERLEY) {
-				C[l][r] = min( C[l + 1][r], C[l][r - 1] );
-			} else {
-				C[l][r] = max( C[l + 1][r] + cards[l], C[l][r - 1] + cards[r] );
-			}
-			p = (p + 1) % 2;			
-		}
-	}
-	
-	return C[0][N - 1];
-}
-
-
-int main() {
-	while (scanf("%d", &N) == 1) {
-		for (int u = 0; u < N; u++) {
-			int p;
-			scanf("%d", &p);
-			cards.push_back(p);
-		}
-		printf("%d\n", calculate());
-		cards.clear();
-	}
-
-	return 0;
-}*/
 
 #include <bits/stdc++.h>
 
@@ -56,37 +7,34 @@ using namespace std;
 #define ALBERTO 0
 #define WANDERLEY 1
 
-typedef unsigned long long ull;
-
-
-// The cards index at left, right and the players
-ull C[MAX_N][MAX_N];
+typedef long long ull;
 
 vector<ull> cards;
 
 int N;
 
+// The amount of cards in the left and the player
+ull C[MAX_N][2];
 
-ull calculate(int l, int r, int p) {	
-	if (C[l][r] != -1)
-		return C[l][r];
-		
-	if (l > r)
-		return C[l][r] = 0;
-	
-	const int nextPlayer = (p + 1) % 2;
-	
-	if (p == WANDERLEY) {
-		return (C[l][r] = min( 
-			calculate(l + 1, r, nextPlayer),
-			calculate(l, r - 1, nextPlayer)));
+ull calculate() {
+
+	for (int l = 0; l < N - 1; l++)
+		C[l][ALBERTO] = max(cards[l], cards[l + 1]);
+
+	int player = ALBERTO;
+	int lastPlayer = WANDERLEY;
+	for (int k = 4; k <= N; k += 2) { //amount of available cards in game
+		lastPlayer = player;
+		player = !(player & 1);
+		for (int l = 0, r = k - 1; r < N; l++, r++) { //moving left and right counters
+			C[l][player] = max(
+				cards[l] + min(C[l + 1][lastPlayer], C[l + 2][lastPlayer]),
+				cards[r] + min(C[l][lastPlayer], C[l + 1][lastPlayer]));
+		}	
 	}
 	
-	return (C[l][r] = max(
-		calculate(l + 1, r, nextPlayer) + cards[l],
-		calculate(l, r - 1, nextPlayer) + cards[r]));
+	return C[0][player];
 }
-
 
 int main() {
 	while (scanf("%d", &N) == 1) {
@@ -95,10 +43,7 @@ int main() {
 			scanf("%llu", &p);
 			cards.push_back(p);
 		}
-		for (int l = 0; l < N; l++)
-			for (int r = 0; r < N; r++)
-				C[l][r] = -1;
-		printf("%llu\n", calculate(0, N - 1, ALBERTO));
+		printf("%llu\n", calculate());
 		cards.clear();
 	}
 
