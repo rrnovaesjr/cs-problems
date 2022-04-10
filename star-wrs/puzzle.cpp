@@ -100,10 +100,11 @@ void dj() {
 		for (int j = 0; j < 5; j++)
 			Q.push(state(jump_to( game, i, j), i, j ));
 	
+	int it = 1;
 	while (Q.size() > 1) {
 		auto u = Q.top();
 		
-		printf("jumping to %d,%d\n", u.i, u.j);
+		printf("%d: jumping to %d,%d\n", it++, u.i, u.j);
 		#ifdef DEBUG
 		doprintgame(u.current_game);
 		#endif
