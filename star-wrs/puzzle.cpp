@@ -76,6 +76,7 @@ vector<state> get_adj(string current_game, int u, int v) {
 	return adj;
 }
 
+#ifndef XOR
 int distance(const state &s1) {
 	int dif = 0;
 	for (int i = 0; i < 5; i++) 
@@ -84,6 +85,18 @@ int distance(const state &s1) {
 				dif++;
 	return dif;
 }
+#endif
+#ifdef XOR
+int distance(const state &s1) {
+	int dif = 0;
+	for (int i = 0; i < 5; i++) 
+		for (int j = 0; j < 5; j++)
+			if (s1.current_game[IDX(i, j)] != goal[IDX(i, j)])
+				dif += ((s1.current_game[IDX(i, j)] - '0') ^ (goal[IDX(i, j)] - '0')) << (IDX(i, j));
+	return dif;
+}
+
+#endif
 
 struct cmp {
 
