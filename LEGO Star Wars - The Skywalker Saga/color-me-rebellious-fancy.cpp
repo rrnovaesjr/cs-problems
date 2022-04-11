@@ -29,14 +29,14 @@ GameState invertColorAtPosition(GameState gameState, int positionX, int position
 void printGameState(GameState gameState) {
     for (int i = 0; i < GAME_SIZE; i++) {
         for (int j = 0; j < GAME_SIZE; j++) {
-            printf(" %d", getColorAtPosition(gameState, i, j));
+            printf("%s%d", j == 0 ? "" : " ", getColorAtPosition(gameState, i, j));
         }
         printf("\n");
     }
 }
 
 int distance(GameState currentGame, GameState goal) {
-    return abs(currentGame - goal);
+    return abs(currentGame ^ goal);
 }
 
 GameState jumpTo(GameState currentGame, int positionX, int positionY) {
@@ -79,49 +79,38 @@ struct Node {
 
 struct NodeMinimum {
 
-    unordered_map<GameState, int> hopsCount;
-    
     GameState goal;
     
     NodeMinimum() {}
     
-    NodeMinimum(unordered_map<GameState, int> hopsCount, GameState goal): hopsCount(hopsCount), goal(goal) {}
+    NodeMinimum(GameState goal): goal(goal) {}
 
     bool operator ()(Node u, Node v) {
-        return hopsCount[u.gameState] + gamestateoperations::distance(u.gameState, goal) > 
-            hopsCount[v.gameState] + gamestateoperations::distance(v.gameState, goal); 
-    };
-    
-    void updateHopsCount(unordered_map<GameState, int> hopsCount) { this->hopsCount = hopsCount; }
+        return gamestateoperations::distance(u.gameState, goal) > gamestateoperations::distance(v.gameState, goal); 
+    }
 
 };
 
-struct Score {
-
-    unordered_map<GameState, int> hopsCount;
+struct Result {
+    unordered_map<GameState, GameState> ancestor;
+    unordered_map<GameState, pair<int, int>> coordinates;
     
-    Score() {}
+    void setAncestor(GameState u, GameState v) { ancestor[u] = v; }
     
-    Score(unordered_map<GameState, int> hopsCount): hopsCount(hopsCount) {}
-    
-    int operator()(Node u) {
-        if (hopsCount.find(u.gameState) == hopsCount.end())
-            return INF;
-        return hopsCount[u.gameState];
+    void setCoordinates(GameState u, int positionX, int positionY) {
+        coordinates[u] = make_pair(positionX, positionY);
     }
     
-    void updateHopsCount(unordered_map<GameState, int> hopsCount) { this->hopsCount = hopsCount; }
-
+    bool isVisited(GameState u) {
+        return ancestor.find(u) != ancestor.end();
+    }
+    
 };
 
-queue<Node> minimize(GameState sourceState, GameState goal) {
-    queue<Node> path;
-    unordered_map<GameState, int> distances;
-    
-    distances[sourceState] = 0;
-    
-    NodeMinimum comparator(distances, goal);
-    Score score(distances);
+Result minimize(GameState sourceState, GameState goal) {
+    Result result;
+        
+    NodeMinimum comparator(goal);
     priority_queue<Node, vector<Node>, NodeMinimum> Q(comparator);
     
     Q.push(Node(sourceState, 0, 0));
@@ -131,23 +120,24 @@ queue<Node> minimize(GameState sourceState, GameState goal) {
         Node u = Q.top();
         Q.pop();
         
-        path.push(u);
+        result.setCoordinates(u.gameState, u.positionX, u.positionY);
         
         if (u.gameState == goal) break;
         
+        #ifdef DEBUG
+        printf("%d,%d -> %d\n", u.positionX, u.positionY, gamestateoperations::distance(u.gameState, goal));
+        gamestateoperations::printGameState(u.gameState);
+        #endif
+        
         vector<Node> neighbours = u.neighbours();
         for (Node v : neighbours) {
-            int newDistance = score(u) + 1;
-            if (newDistance < score(v)) {
-                
+            if (!result.isVisited(v.gameState)) {
                 Q.push(v);
-                distances[v.gameState] = score(u) + 1;
-                comparator.updateHopsCount(distances);
-                score.updateHopsCount(distances);
+                result.setAncestor(v.gameState, u.gameState);
             }
         }
     }
-    return path;
+    return result;
 }
 
 int main() {
@@ -166,15 +156,20 @@ int main() {
     
     if (goalColor == 0) goal = !goal;
     
-    queue<Node> path = minimize(source, goal);
+    Result result = minimize(source, goal);
     
-    printf("%lu\n", path.size());
-    while (!path.empty()) {
-        Node u = path.front();
-        printf("%d %d\n", u.positionX, u.positionY);
-        gamestateoperations::printGameState(u.gameState);
-        path.pop();
-    }
+    auto path = result.ancestor;
+    int count = 0;
+    GameState u = goal;
+    do {
+        u = path[u];
+        auto coordinates = result.coordinates[u];
+        printf("%d %d\n", coordinates.first, coordinates.second); 
+        gamestateoperations::printGameState(u);
+        count++;
+    } while (u != source);
+    
+    printf("%d\n", count);
     
     return 0;
 }
