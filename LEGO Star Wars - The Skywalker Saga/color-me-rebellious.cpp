@@ -1,35 +1,43 @@
 #include <bits/stdc++.h>
 #define INF 0x3f3f3f3f
+#define GOAL_1 0b1111111111111111111111111
+#define GOAL_0 0b0000000000000000000000000
 
 using namespace std;
 
-string game = "";
+int game = GOAL_0;
 
-string goal;
+int goal;
 
 struct state {
 	int i;
 	int j;
-	string current_game;
+	int current_game;
 	
 	state() {}
 	
-	state(string current_game, int i, int j): i(i), j(j), current_game(current_game) {}
+	state(int current_game, int i, int j): i(i), j(j), current_game(current_game) {}
 };
 
 inline int IDX(int i, int j) {
 	return i * 5 + j;
 }
 
-char sw(char v) {
-	if (v == '1') return '0';
-	return '1';
+int sw(int v) {
+	return !v;
 }
 
-void doprintgame(string mygame) {
+inline int bit_at(int value, int i, int j) {
+	int bitmask = 1 << IDX(i, j);
+	return (value & bitmask) >> IDX(i, j);	
+}
+
+void doprintgame(int mygame) {
+	int bitmask;
 	for (int i = 0; i < 5; i++) {
 		for (int j = 0; j < 5; j++) {
-			printf(" %c", mygame[IDX(i, j)]);
+			bitmask = (1 << IDX(i, j));
+			printf(" %d", bit_at(mygame, i, j) );
 		}
 		printf("\n");
 	}
@@ -41,30 +49,38 @@ void printgame() {
 }
 
 
-string jump_to(string current_game, int i, int j) {
-	string nei = current_game;
+int jump_to(int current_game, int i, int j) {
+	int nei = current_game;
+	int bitmask;
+	int value;
 	for (int n = -1; n <= 1; n++) {
 		if (n + i >= 0 && n + i < 5) {
 			for (int m = -1; m <= 1; m++) {
 				if (m + j >= 0 && m + j < 5) {
-					nei[IDX(i + n, j + m)] = sw(current_game[IDX(i + n, j + m)]); 	
+					bitmask = (1 << IDX(i + n, j + m));
+					value = sw( bit_at(current_game, i + n, j + m) );
+					nei = (nei & ~bitmask) | (value << IDX(i + n, j + m));
 				}
 
 			}
 		}
 
 	}
-	nei[IDX(i, j)] = current_game[IDX(i, j)];
+	bitmask = (1 << IDX(i, j));
+	value = bit_at(current_game, i, j);
+	nei = (nei & ~bitmask) | (value << IDX(i, j));
 	return nei;
 }
 
 void generate_goal(int value) {
-	for (int i = 0; i < 5; i++)
-		for (int j = 0; j < 5; j++)
-			goal.push_back(value + '0');
+	if (value == 0) {
+		goal = GOAL_0;
+		return;
+	}
+	goal = GOAL_1;
 }
 
-vector<state> get_adj(string current_game, int u, int v) {
+vector<state> get_adj(int current_game, int u, int v) {
 	vector<state> adj;
 	for (int i = 0; i < 5; i++) {
 		for (int j = 0; j < 5; j++) {
@@ -78,22 +94,12 @@ vector<state> get_adj(string current_game, int u, int v) {
 
 #ifndef XOR
 int distance(const state &s1) {
-	int dif = 0;
-	for (int i = 0; i < 5; i++) 
-		for (int j = 0; j < 5; j++)
-			if (s1.current_game[IDX(i, j)] != goal[IDX(i, j)])
-				dif++;
-	return dif;
+	return abs( goal - s1.current_game );
 }
 #endif
 #ifdef XOR
 int distance(const state &s1) {
-	int dif = 0;
-	for (int i = 0; i < 5; i++) 
-		for (int j = 0; j < 5; j++)
-			if (s1.current_game[IDX(i, j)] != goal[IDX(i, j)])
-				dif += ((s1.current_game[IDX(i, j)] - '0') ^ (goal[IDX(i, j)] - '0')) << (IDX(i, j));
-	return dif;
+	return s1.current_game ^ goal;
 }
 
 #endif
@@ -139,7 +145,7 @@ int main() {
 	for (int i = 0; i < 5; i++) {
 		for (int j = 0; j < 5; j++) {
 			cin >> value;
-			game.push_back(value + '0');	
+			game |= (value << IDX(i, j));
 		}
 	}
 	printgame();
