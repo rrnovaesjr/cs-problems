@@ -35,10 +35,6 @@ void printGameState(GameState gameState) {
     }
 }
 
-int distance(GameState currentGame, GameState goal) {
-    return abs(currentGame ^ goal);
-}
-
 GameState jumpTo(GameState currentGame, int positionX, int positionY) {
     for (int i = -1; i <= 1; i++) {
         int pi = positionX + i;
@@ -77,20 +73,6 @@ struct Node {
     }
 };
 
-struct NodeMinimum {
-
-    GameState goal;
-    
-    NodeMinimum() {}
-    
-    NodeMinimum(GameState goal): goal(goal) {}
-
-    bool operator ()(Node u, Node v) {
-        return gamestateoperations::distance(u.gameState, goal) > gamestateoperations::distance(v.gameState, goal); 
-    }
-
-};
-
 struct Result {
     unordered_map<GameState, GameState> ancestor;
     unordered_map<GameState, pair<int, int>> coordinates;
@@ -110,14 +92,13 @@ struct Result {
 Result minimize(GameState sourceState, GameState goal) {
     Result result;
         
-    NodeMinimum comparator(goal);
-    priority_queue<Node, vector<Node>, NodeMinimum> Q(comparator);
+    queue<Node> Q;
     
     Q.push(Node(sourceState, 0, 0));
     
     int it = 1;
     while (!Q.empty()) {
-        Node u = Q.top();
+        Node u = Q.front();
         Q.pop();
         
         result.setCoordinates(u.gameState, u.positionX, u.positionY);
@@ -125,7 +106,6 @@ Result minimize(GameState sourceState, GameState goal) {
         if (u.gameState == goal) break;
         
         #ifdef DEBUG
-        printf("%d,%d -> %d\n", u.positionX, u.positionY, gamestateoperations::distance(u.gameState, goal));
         gamestateoperations::printGameState(u.gameState);
         #endif
         
@@ -158,18 +138,30 @@ int main() {
     
     Result result = minimize(source, goal);
     
-    auto path = result.ancestor;
+    auto ancestor = result.ancestor;
     int count = 0;
     GameState u = goal;
+    stack<Node> path;
+
     do {
-        u = path[u];
         auto coordinates = result.coordinates[u];
-        printf("%d %d\n", coordinates.first, coordinates.second); 
-        gamestateoperations::printGameState(u);
+        path.push(Node(u, coordinates.first, coordinates.second));
         count++;
+        u = ancestor[u];
     } while (u != source);
     
+    path.push(Node(source, 0, 0));
+    
     printf("%d\n", count);
+    
+    Node x; 
+    while (!path.empty()) {
+        x = path.top();
+        path.pop();
+        
+        printf("%d %d\n", x.positionX, x.positionY);
+        gamestateoperations::printGameState(x.gameState);
+    }
     
     return 0;
 }
